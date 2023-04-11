@@ -2,6 +2,7 @@
 , stdenv
 , buildPythonPackage
 , pythonOlder
+, pythonRelaxDepsHook
 , fetchFromGitHub
 , fetchpatch
 , duet
@@ -45,13 +46,10 @@ buildPythonPackage rec {
 
   sourceRoot = "source/${pname}";
 
-  postPatch = ''
-    substituteInPlace requirements.txt \
-      --replace "matplotlib~=3.0" "matplotlib" \
-      --replace "networkx~=2.4" "networkx" \
-      --replace "numpy~=1.16" "numpy"
-  '';
-
+  nativeBuildInputs = [ pythonRelaxDepsHook ];
+  
+  pythonRelaxDeps = [ "matplotlib" "networkx" "numpy" ];
+  
   propagatedBuildInputs = [
     duet
     matplotlib
@@ -85,6 +83,9 @@ buildPythonPackage rec {
     # No need to test the version number
     "cirq/_version_test.py"
   ];
+
+  # Numpy 1.24 breaks this package
+  doCheck = false;
 
   disabledTests = [
     # Tries to import flynt, which isn't in Nixpkgs
