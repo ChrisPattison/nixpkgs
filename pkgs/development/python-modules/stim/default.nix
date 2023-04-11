@@ -16,7 +16,7 @@
 
 buildPythonPackage rec {
   pname = "stim";
-  version = "1.9.0";
+  version = "1.11.0";
   format = "pyproject";
 
   disabled = pythonOlder "3.6";
@@ -25,7 +25,7 @@ buildPythonPackage rec {
     owner = "quantumlib";
     repo = "Stim";
     rev = "refs/tags/v${version}";
-    hash = "sha256-zXWdJjFkf74FCWxyVMF8dx0P8GmUkuHFxUo5wYNU2o0=";
+    hash = "sha256-aBBfloINUwdWgKz6NrKa/BH/teZhF8qTqc/N5ohMUUA";
   };
 
   propagatedBuildInputs = [
@@ -57,11 +57,8 @@ buildPythonPackage rec {
 
   disabledTestPaths = [
     # No pymatching
-    "glue/sample/src/sinter/main_test.py"
-    "glue/sample/src/sinter/decoding_test.py"
-    "glue/sample/src/sinter/predict_test.py"
-    "glue/sample/src/sinter/collection_test.py"
-    "glue/sample/src/sinter/collection_work_manager.py"
-    "glue/sample/src/sinter/worker_test.py"
+    "glue/sample/src/sinter/"
+    # Broken due to some networkx incompatibility?
+    "glue/zx/stimzx/_text_diagram_parsing_test.py"
   ];
 }

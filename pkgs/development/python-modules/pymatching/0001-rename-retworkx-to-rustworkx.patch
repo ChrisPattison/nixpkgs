@@ -1,0 +1,350 @@
+From 8b31bfbc05dc78f3e4255c9791d0b5bbf7dc9ac5 Mon Sep 17 00:00:00 2001
+From: James Wootton <decodoku@gmail.com>
+Date: Tue, 4 Apr 2023 14:46:07 +0200
+Subject: [PATCH] rename retworkx to rustworkx
+
+---
+ README.md                                 |  4 +--
+ setup.py                                  |  2 +-
+ src/pymatching/matching.py                | 36 +++++++++++------------
+ tests/matching/load_from_retworkx_test.py | 26 ++++++++--------
+ tests/matching/output_graph_test.py       | 10 +++----
+ tests/matching/properties_test.py         |  8 ++---
+ 6 files changed, 43 insertions(+), 43 deletions(-)
+
+diff --git a/README.md b/README.md
+index 83a1a05..6ab9763 100644
+--- a/README.md
++++ b/README.md
+@@ -83,7 +83,7 @@ pip install pymatching --upgrade
+ ## Usage
+ 
+ PyMatching can load matching graphs from a check matrix, a `stim.DetectorErrorModel`, a `networkx.Graph`, a 
+-`retworkx.PyGraph` or by adding edges individually with `pymatching.Matching.add_edge` and 
++`rustworkx.PyGraph` or by adding edges individually with `pymatching.Matching.add_edge` and 
+ `pymatching.Matching.add_boundary_edge`.
+ 
+ ### Decoding Stim circuits
+@@ -287,7 +287,7 @@ Instead of using a check matrix, the Matching object can also be constructed usi
+ the [`Matching.add_edge`](https://pymatching.readthedocs.io/en/stable/api.html#pymatching.matching.Matching.add_edge)
+ and 
+ [`Matching.add_boundary_edge`](https://pymatching.readthedocs.io/en/stable/api.html#pymatching.matching.Matching.add_boundary_edge) 
+-methods, or by loading from a NetworkX or retworkx graph. 
++methods, or by loading from a NetworkX or rustworkx graph. 
+ 
+ For more details on how to use PyMatching,
+ see [the documentation](https://pymatching.readthedocs.io).
+diff --git a/setup.py b/setup.py
+index d43a89c..e3a7910 100644
+--- a/setup.py
++++ b/setup.py
+@@ -153,5 +153,5 @@ setup(
+         'console_scripts': ['pymatching=pymatching._cli_argv:cli_argv'],
+     },
+     python_requires=">=3.6",
+-    install_requires=['scipy', 'numpy', 'networkx', 'retworkx>=0.11.0', 'matplotlib']
++    install_requires=['scipy', 'numpy', 'networkx', 'rustworkx>=0.11.0', 'matplotlib']
+ )
+diff --git a/src/pymatching/matching.py b/src/pymatching/matching.py
+index b0cfbe0..8aff920 100644
+--- a/src/pymatching/matching.py
++++ b/src/pymatching/matching.py
+@@ -17,7 +17,7 @@ import warnings
+ 
+ import numpy as np
+ import networkx as nx
+-import retworkx as rx
++import rustworkx as rx
+ import pymatching
+ from scipy.sparse import csc_matrix, spmatrix
+ import matplotlib.cbook
+@@ -33,7 +33,7 @@ class Matching:
+     A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder.
+     The matching graph can be constructed using the `Matching.add_edge` and `Matching.add_boundary_edge`
+     methods. Alternatively, it can be loaded from a parity check matrix (a `scipy.sparse` matrix or `numpy.ndarray`
+-    with one or two non-zero elements in each column), a NetworkX or retworkx graph, or from
++    with one or two non-zero elements in each column), a NetworkX or rustworkx graph, or from
+     a `stim.DetectorErrorModel`.
+     """
+ 
+@@ -54,8 +54,8 @@ class Matching:
+         graph : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` or `stim.DetectorErrorModel`, optional
+             The matching graph to be decoded with minimum-weight perfect
+             matching, given either as a binary parity check matrix (scipy sparse
+-            matrix or numpy.ndarray), a NetworkX or retworkx graph, or a Stim DetectorErrorModel.
+-            Each edge in the NetworkX or retworkx graph can have optional
++            matrix or numpy.ndarray), a NetworkX or rustworkx graph, or a Stim DetectorErrorModel.
++            Each edge in the NetworkX or rustworkx graph can have optional
+             attributes ``fault_ids``, ``weight`` and ``error_probability``.
+             ``fault_ids`` should be an int or a set of ints.
+             Each fault id corresponds to a self-inverse fault that is flipped when the
+@@ -139,7 +139,7 @@ class Matching:
+         if isinstance(graph, nx.Graph):
+             self.load_from_networkx(graph)
+         elif isinstance(graph, rx.PyGraph):
+-            self.load_from_retworkx(graph)
++            self.load_from_rustworkx(graph)
+         elif type(graph).__name__ == "DetectorErrorModel":
+             self._load_from_detector_error_model(graph)
+         else:
+@@ -147,7 +147,7 @@ class Matching:
+                 graph = csc_matrix(graph)
+             except TypeError:
+                 raise TypeError("The type of the input graph is not recognised. `graph` must be "
+-                                "a scipy.sparse or numpy matrix, networkx or retworkx graph, or "
++                                "a scipy.sparse or numpy matrix, networkx or rustworkx graph, or "
+                                 "stim.DetectorErrorModel.")
+             self.load_from_check_matrix(graph, weights, error_probabilities,
+                                         repetitions, timelike_weights, measurement_error_probabilities,
+@@ -1474,14 +1474,14 @@ class Matching:
+             g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
+         self._matching_graph = g
+ 
+-    def load_from_retworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
++    def load_from_rustworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
+         r"""
+-        Load a matching graph from a retworkX graph
++        Load a matching graph from a rustworkx graph
+ 
+         Parameters
+         ----------
+-        graph : retworkx.PyGraph
+-            Each edge in the retworkx graph can have dictionary payload with keys
++        graph : rustworkx.PyGraph
++            Each edge in the rustworkx graph can have dictionary payload with keys
+             ``fault_ids``, ``weight`` and ``error_probability``. ``fault_ids`` should be
+             an int or a set of ints. Each fault id corresponds to a self-inverse fault
+             that is flipped when the corresponding edge is flipped. These self-inverse
+@@ -1504,7 +1504,7 @@ class Matching:
+         Examples
+         --------
+         >>> import pymatching
+-        >>> import retworkx as rx
++        >>> import rustworkx as rx
+         >>> import math
+         >>> g = rx.PyGraph()
+         >>> matching = g.add_nodes_from([{} for _ in range(3)])
+@@ -1517,7 +1517,7 @@ class Matching:
+         <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
+         """
+         if not isinstance(graph, rx.PyGraph):
+-            raise TypeError("G must be a retworkx graph")
++            raise TypeError("G must be a rustworkx graph")
+         boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
+         num_nodes = len(graph)
+         num_fault_ids = 0 if min_num_fault_ids is None else min_num_fault_ids
+@@ -1546,7 +1546,7 @@ class Matching:
+                         " (or convertible to a set), not {}".format(fault_ids))
+             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
+             e_prob = attr.get("error_probability", -1)
+-            # Note: retworkx graphs do not support parallel edges (merge strategy is redundant)
++            # Note: rustworkx graphs do not support parallel edges (merge strategy is redundant)
+             g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
+         self._matching_graph = g
+ 
+@@ -1578,17 +1578,17 @@ class Matching:
+             graph.nodes[num_nodes]['is_boundary'] = True
+         return graph
+ 
+-    def to_retworkx(self) -> rx.PyGraph:
+-        """Convert to retworkx graph
+-        Returns a retworkx graph object corresponding to the matching graph. Each edge
++    def to_rustworkx(self) -> rx.PyGraph:
++        """Convert to rustworkx graph
++        Returns a rustworkx graph object corresponding to the matching graph. Each edge
+         payload is a ``dict`` with keys `fault_ids`, `weight` and `error_probability` and
+         each node has a ``dict`` payload with the key ``is_boundary`` and the value is
+         a boolean.
+ 
+         Returns
+         -------
+-        retworkx.PyGraph
+-            retworkx graph corresponding to the matching graph
++        rustworkx.PyGraph
++            rustworkx graph corresponding to the matching graph
+         """
+         graph = rx.PyGraph(multigraph=False)
+         num_nodes = self.num_nodes
+diff --git a/tests/matching/load_from_retworkx_test.py b/tests/matching/load_from_retworkx_test.py
+index 68e8794..85afa94 100644
+--- a/tests/matching/load_from_retworkx_test.py
++++ b/tests/matching/load_from_retworkx_test.py
+@@ -13,14 +13,14 @@
+ # limitations under the License.
+ 
+ import numpy as np
+-import retworkx as rx
++import rustworkx as rx
+ import pytest
+ 
+ from pymatching import Matching
+ from pymatching._cpp_pymatching import MatchingGraph
+ 
+ 
+-def test_boundary_from_retworkx():
++def test_boundary_from_rustworkx():
+     g = rx.PyGraph()
+     g.add_nodes_from([{} for _ in range(5)])
+     g.add_edge(4, 0, dict(fault_ids=0))
+@@ -37,7 +37,7 @@ def test_boundary_from_retworkx():
+     assert np.array_equal(m.decode(np.array([0, 0, 1, 0])), np.array([0, 0, 0, 1, 1]))
+ 
+ 
+-def test_boundaries_from_retworkx():
++def test_boundaries_from_rustworkx():
+     g = rx.PyGraph()
+     g.add_nodes_from([{} for _ in range(6)])
+     g.add_edge(0, 1, dict(fault_ids=0))
+@@ -56,7 +56,7 @@ def test_boundaries_from_retworkx():
+     assert np.array_equal(m.decode(np.array([0, 0, 0, 1, 0])), np.array([0, 0, 0, 1, 1]))
+ 
+ 
+-def test_unweighted_stabiliser_graph_from_retworkx():
++def test_unweighted_stabiliser_graph_from_rustworkx():
+     w = rx.PyGraph()
+     w.add_nodes_from([{} for _ in range(6)])
+     w.add_edge(0, 1, dict(fault_ids=0, weight=7.0))
+@@ -89,7 +89,7 @@ def test_unweighted_stabiliser_graph_from_retworkx():
+     )
+ 
+ 
+-def test_mwpm_from_retworkx():
++def test_mwpm_from_rustworkx():
+     g = rx.PyGraph()
+     g.add_nodes_from([{} for _ in range(3)])
+     g.add_edge(0, 1, dict(fault_ids=0))
+@@ -121,7 +121,7 @@ def test_mwpm_from_retworkx():
+     assert (m.num_fault_ids == 0)
+ 
+ 
+-def test_matching_edges_from_retworkx():
++def test_matching_edges_from_rustworkx():
+     g = rx.PyGraph()
+     g.add_nodes_from([{} for _ in range(4)])
+     g.add_edge(0, 1, dict(fault_ids=0, weight=1.1, error_probability=0.1))
+@@ -142,7 +142,7 @@ def test_matching_edges_from_retworkx():
+     assert es == expected_edges
+ 
+ 
+-def test_qubit_id_accepted_via_retworkx():
++def test_qubit_id_accepted_via_rustworkx():
+     g = rx.PyGraph()
+     g.add_nodes_from([{} for _ in range(4)])
+     g.add_edge(0, 1, dict(qubit_id=0, weight=1.1, error_probability=0.1))
+@@ -162,29 +162,29 @@ def test_qubit_id_accepted_via_retworkx():
+     assert es == expected_edges
+ 
+ 
+-def test_load_from_retworkx_raises_value_error_if_qubit_id_and_fault_ids_both_supplied():
++def test_load_from_rustworkx_raises_value_error_if_qubit_id_and_fault_ids_both_supplied():
+     with pytest.raises(ValueError):
+         g = rx.PyGraph()
+         g.add_nodes_from([{} for _ in range(3)])
+         g.add_edge(0, 1, dict(qubit_id=0, fault_ids=0))
+         g.add_edge(1, 2, dict(qubit_id=1, fault_ids=1))
+         m = Matching()
+-        m.load_from_retworkx(g)
++        m.load_from_rustworkx(g)
+ 
+ 
+-def test_load_from_retworkx_type_errors_raised():
++def test_load_from_rustworkx_type_errors_raised():
+     with pytest.raises(TypeError):
+         m = Matching()
+-        m.load_from_retworkx("A")
++        m.load_from_rustworkx("A")
+     with pytest.raises(TypeError):
+         g = rx.PyGraph()
+         g.add_nodes_from([{} for _ in range(2)])
+         g.add_edge(0, 1, dict(fault_ids={0, "a"}))
+         m = Matching()
+-        m.load_from_retworkx(g)
++        m.load_from_rustworkx(g)
+     with pytest.raises(TypeError):
+         g = rx.PyGraph()
+         g.add_nodes_from([{} for _ in range(2)])
+         g.add_edge(0, 1, dict(fault_ids=[[0], [2]]))
+         m = Matching()
+-        m.load_from_retworkx(g)
++        m.load_from_rustworkx(g)
+diff --git a/tests/matching/output_graph_test.py b/tests/matching/output_graph_test.py
+index b85e9ac..33a30b9 100644
+--- a/tests/matching/output_graph_test.py
++++ b/tests/matching/output_graph_test.py
+@@ -13,7 +13,7 @@
+ # limitations under the License.
+ 
+ import networkx as nx
+-import retworkx as rx
++import rustworkx as rx
+ 
+ from pymatching import Matching
+ 
+@@ -59,7 +59,7 @@ def test_matching_to_networkx():
+     assert list(g.nodes(data=True)) == [(0, {"is_boundary": False}), (1, {"is_boundary": False})]
+ 
+ 
+-def test_matching_to_retworkx():
++def test_matching_to_rustworkx():
+     g = rx.PyGraph()
+     g.add_nodes_from([{} for _ in range(4)])
+     g.add_edge(0, 1, dict(fault_ids={0}, weight=1.1, error_probability=0.1))
+@@ -76,7 +76,7 @@ def test_matching_to_retworkx():
+     g[1]['is_boundary'] = False
+     g[2]['is_boundary'] = False
+ 
+-    g2 = m.to_retworkx()
++    g2 = m.to_rustworkx()
+ 
+     assert g.node_indices() == g2.node_indices()
+     gedges = [({s, t}, d) for (s, t, d) in g.weighted_edge_list()]
+@@ -87,7 +87,7 @@ def test_matching_to_retworkx():
+     m.add_boundary_edge(0, weight=2)
+     m.add_edge(0, 1, weight=3)
+     m.add_edge(1, 2, weight=4)
+-    g = m.to_retworkx()
++    g = m.to_rustworkx()
+     es = list(g.weighted_edge_list())
+     assert es == [(0, 3, {"weight": 2.0, "error_probability": -1, "fault_ids": set()}),
+                   (0, 1, {"weight": 3.0, "error_probability": -1, "fault_ids": set()}),
+@@ -97,7 +97,7 @@ def test_matching_to_retworkx():
+ 
+     m = Matching()
+     m.add_edge(0, 1)
+-    g = m.to_retworkx()
++    g = m.to_rustworkx()
+     assert list(g.weighted_edge_list()) == [(0, 1, {"weight": 1.0, "error_probability": -1, "fault_ids": set()})]
+     assert list(g.nodes()) == [{"is_boundary": False}, {"is_boundary": False}]
+ 
+diff --git a/tests/matching/properties_test.py b/tests/matching/properties_test.py
+index e8b81eb..715dd24 100644
+--- a/tests/matching/properties_test.py
++++ b/tests/matching/properties_test.py
+@@ -13,7 +13,7 @@
+ # limitations under the License.
+ 
+ import networkx as nx
+-import retworkx as rx
++import rustworkx as rx
+ 
+ from pymatching.matching import Matching
+ 
+@@ -51,12 +51,12 @@ def test_set_min_num_fault_ids():
+     g = rx.PyGraph()
+     g.add_nodes_from([{} for _ in range(2)])
+     g.add_edge(0, 1, dict(fault_ids=3))
+-    m.load_from_retworkx(g)
++    m.load_from_rustworkx(g)
+     assert m.num_fault_ids == 4
+     assert m.decode([1, 1]).shape[0] == 4
+-    m.load_from_retworkx(g, min_num_fault_ids=7)
++    m.load_from_rustworkx(g, min_num_fault_ids=7)
+     assert m.num_fault_ids == 7
+     assert m.decode([1, 1]).shape[0] == 7
+-    m.load_from_retworkx(g, min_num_fault_ids=2)
++    m.load_from_rustworkx(g, min_num_fault_ids=2)
+     assert m.num_fault_ids == 4
+     assert m.decode([1, 1]).shape[0] == 4
+-- 
+2.39.2 (Apple Git-143)
+

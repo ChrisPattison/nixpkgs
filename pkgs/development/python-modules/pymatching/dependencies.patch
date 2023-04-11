@@ -1,0 +1,60 @@
+From 456989eb955acc500e0ab764373b23692880c04b Mon Sep 17 00:00:00 2001
+From: Chris Pattison <chpattison@gmail.com>
+Date: Tue, 11 Apr 2023 23:40:30 -0700
+Subject: [PATCH] cmake patch
+
+---
+ CMakeLists.txt | 12 ++++++------
+ setup.py       |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3afa505..9a09239 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -16,19 +16,19 @@ endif ()
+ include(FetchContent)
+ FetchContent_Declare(
+         googletest
+-        GIT_REPOSITORY https://github.com/google/googletest.git
+-        GIT_TAG release-1.12.1
++        SOURCE_DIR @gtest_src@
+ )
+ 
+ FetchContent_MakeAvailable(googletest)
+ 
+ FetchContent_Declare(stim
+-        GIT_REPOSITORY https://github.com/quantumlib/stim.git
+-        GIT_TAG v1.10.0)
++        SOURCE_DIR @stim_src@
++)
++
+ FetchContent_GetProperties(stim)
+ if (NOT stim_POPULATED)
+     FetchContent_Populate(stim)
+-    add_subdirectory(${stim_SOURCE_DIR})
++    add_subdirectory(${stim_SOURCE_DIR} ${stim_BINARY_DIR})
+ endif ()
+ 
+ if (NOT (MSVC))
+@@ -135,4 +135,4 @@ target_compile_options(_cpp_pymatching PRIVATE ${ARCH_OPT})
+ # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
+ # define (VERSION_INFO) here.
+ #target_compile_definitions(_cpp_pymatching
+-#        PRIVATE VERSION_INFO=${PYMATCHING_VERSION_INFO})
+\ No newline at end of file
++#        PRIVATE VERSION_INFO=${PYMATCHING_VERSION_INFO})
+diff --git a/setup.py b/setup.py
+index d43a89c..37990b0 100644
+--- a/setup.py
++++ b/setup.py
+@@ -153,5 +153,5 @@ setup(
+         'console_scripts': ['pymatching=pymatching._cli_argv:cli_argv'],
+     },
+     python_requires=">=3.6",
+-    install_requires=['scipy', 'numpy', 'networkx', 'rustworkx>=0.11.0', 'matplotlib']
++    install_requires=['scipy', 'numpy', 'networkx', 'rustworkx', 'matplotlib']
+ )
+-- 
+2.39.2 (Apple Git-143)
+
